@@ -4,11 +4,11 @@ metadata:
   name: nginx               # Name of the Pod
   namespace: roboshop       # The Pod will be created inside the 'roboshop' namespace
   labels:                   # Labels (tags) used to organize and identify the Pod
-    name: nginx
-    project: roboshop
+    purpose: multi container
 spec:                       # Specification of the Pod (containers inside it)
   containers:
   - name: nginx             # Name of the container inside the Pod
     image: nginx            # Docker image to run
-    ports:
-      - containerPort: 80   # Port number exposed by the container (P is capital)
+  - name: almalinux
+    image: almalinux:9      # almalinux won't run directly container that's why sleep command
+    command: ["sleep", "1000"]
