@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Pod                       # We are creating a Pod
+metadata:
+  name: error-test              # Name of the Pod
+  namespace: roboshop           # Pod will be created in 'roboshop' namespace
+spec:
+  containers:
+  - name: nginx                 # Name of the container
+    image: ngindfdfadsfsaf      # This image does NOT exist in Docker Hub
+                                # So the image pull will FAIL
+
+  # - name: almalinux
+  #   image: almalinux:9
