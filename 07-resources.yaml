@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Pod                          # Creating a Pod
 metadata:
   name: resources-demo             # Pod name
-  namespace: roboshop              # Namespace
+  namespace: roboshop              # Pod will be created inside 'roboshop' namespace
 spec:
   containers:
   - name: nginx                    # Container name

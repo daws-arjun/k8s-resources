@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: env-demo                 # Name of the Pod
+  namespace: roboshop            # Pod will be created inside 'roboshop' namespace
+spec:
+  containers:
+  - name: nginx                  # Container name
+    image: nginx                 # Docker image to run
+    
+    env:                         # List of environment variables for the container
+    - name: course               # Name of the environment variable
+      value: kubernetes          # Value assigned to 'course'
+    - name: trainee              # Name of another environment variable
+      value: nagarjuna           # Value assigned to 'trainee'
