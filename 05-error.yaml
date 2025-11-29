@@ -7,7 +7,12 @@ spec:
   containers:
   # - name: nginx               # Name of the container
   #   image: ngindfdfadsfsaf    # This image does NOT exist in Docker Hub
-  #                               So the image pull will FAIL
+                                #  So the image pull will FAIL
 
   - name: almalinux   
-    image: almalinux:9          # Valid AlmaLinux image that exists in Docker Hub
+    image: almalinux:9           # AlmaLinux image has NO default process
+                                 # → It starts and immediately exits
+                                 # → This causes CrashLoopBackOff
+    # No command is given, so the container exits instantly.
+    # To avoid CrashLoopBackOff, you usually add:
+    # command: ["sleep", "1000"]

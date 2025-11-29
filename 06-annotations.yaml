@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Pod                        # We are creating a Pod object
+metadata:
+  name: annotations-demo         # Name of the Pod
+  annotations:                   # Annotations = extra metadata (not used for selection)
+    jenkins.url: "http://jenkins.joindevops.com/build/job/5"   # Stores CI/CD info like build URL
+    imageregistry: "https://hub.docker.com/"                   # Stores helpful metadata about image source
+spec:
+  containers:
+  - name: nginx                  # Container name
+    image: nginx                 # Docker image to run inside the Pod
