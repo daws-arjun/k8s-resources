@@ -5,9 +5,9 @@ metadata:
   namespace: roboshop           # Pod will be created in 'roboshop' namespace
 spec:
   containers:
-  - name: nginx                 # Name of the container
-    image: ngindfdfadsfsaf      # This image does NOT exist in Docker Hub
-                                # So the image pull will FAIL
+  # - name: nginx               # Name of the container
+  #   image: ngindfdfadsfsaf    # This image does NOT exist in Docker Hub
+  #                               So the image pull will FAIL
 
-  # - name: almalinux
-  #   image: almalinux:9
+  - name: almalinux   
+    image: almalinux:9          # Valid AlmaLinux image that exists in Docker Hub
