@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Pod                          # Creating a Pod
+metadata:
+  name: resources-demo             # Pod name
+spec:
+  containers:
+  - name: nginx                    # Container name
+    image: nginx                   # Docker image to run
+    resources:
+      requests:                    # Minimum resources the container needs (soft limit)
+        memory: "68Mi"             # Pod is guaranteed at least 68 MiB RAM
+        cpu: "100m"                # Pod is guaranteed 0.1 CPU (100 millicores)
+        
+      limits:                      # Maximum resources the container is allowed to use (hard limit)
+        memory: "100Mi"            # Container cannot use more than 100 MiB RAM
+        cpu: "120m"                # Container cannot exceed 0.12 CPU
