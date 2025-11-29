@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Pod                     # Creating a Pod
 metadata:
-  name: nginx                 # Pod name
+  name: multi-container       # Pod name
   namespace: roboshop         # Pod will be created in 'roboshop' namespace
   labels:
     purpose: multi-container  # Labels cannot contain spaces
