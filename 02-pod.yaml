@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod                   # This tells Kubernetes that we are creating a Pod
+metadata:
+  name: nginx               # Name of the Pod
+  namespace: roboshop       # The Pod will be created inside the 'roboshop' namespace
+  labels:                   # Labels (tags) used to organize and identify the Pod
+    name: nginx
+    project: roboshop
+spec:                       # Specification of the Pod (containers inside it)
+  containers:
+  - name: nginx             # Name of the container inside the Pod
+    image: nginx            # Docker image to run
+    ports:
+      - containerPort: 80   # Port number exposed by the container (P is capital)
