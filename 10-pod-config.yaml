@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Pod        
+metadata:
+  name: config-map-demo     # Name of the Pod
+  namespace: roboshop       # Pod will be created in 'roboshop' namespace
+spec:
+  containers:
+  - name: nginx             # Container name
+    image: nginx            # Docker image to run
+    envFrom:                # Load all key-values from a ConfigMap
+    - configMapRef:         # Correct syntax (lowercase 'c')
+        name: pod-config    # Name of the ConfigMap to load variables from
