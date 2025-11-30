@@ -2,6 +2,7 @@ apiVersion: v1
 kind: Pod                                # Creating a Pod
 metadata:
   name: service-lb-demo                   # Name of the Pod
+  namespace: roboshop
 
   # These labels MUST match the LoadBalancer Service selector
   labels:
