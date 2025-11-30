@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap                      # We are creating a ConfigMap (non-confidential configuration)
+metadata:
+  name: pod-config                   # Name of the ConfigMap
+  namespace: roboshop                # ConfigMap will be created inside 'roboshop' namespace
+  
+data:                                # Key–value pairs of non-sensitive configuration
+  course: "DevSecOps with AWS"       # Example config value (not secret)
+  duration: "120hrs"                 # Another config value
+  trainee: "nagarjuna"               # Another config value
