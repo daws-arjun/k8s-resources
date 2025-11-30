@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Pod                                # Creating a Pod
+metadata:
+  name: service-lb-demo                   # Name of the Pod
+
+  # These labels MUST match the LoadBalancer Service selector
+  labels:
+    project: roboshop                     # Matches Service selector label
+    component: frontend                   # Matches Service selector label
+    environment: dev                      # Matches Service selector label
+    purpose: load-balancer                # Matches Service selector label
+
+spec:
+  containers:
+  - name: nginx                           # Container name
+    image: nginx                          # Docker image to run
