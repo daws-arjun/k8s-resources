@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod                                # Creating a Pod
+metadata:
+  name: service-np-demo                  # Name of the Pod
+  namespace: roboshop                    # Pod will run in 'roboshop' namespace
+
+  # These labels MUST match the selector in the NodePort Service
+  labels:
+    project: roboshop                    # Matches Service selector
+    component: frontend                  # Matches Service selector
+    environment: dev                     # Matches Service selector
+    purpose: node-port                   # Matches Service selector
+
+spec:
+  containers:
+  - name: nginx                          # Container name
+    image: nginx                         # Docker image for this Pod
