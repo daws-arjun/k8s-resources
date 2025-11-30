@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service                         # Creating a Service object
+metadata:
+  name: nginx                         # Name of the Service
+  namespace: roboshop                 # This Service will be created in 'roboshop' namespace
+spec:
+  selector:                           # Service forwards traffic to Pods with these labels
+    project: roboshop                 # Pod must have this label
+    component: frontend               # Pod must have this label
+    environment: dev                  # Pod must have this label
+  ports:
+    - protocol: TCP                   # Protocol used by the Service (TCP for web apps)
+      port: 80                        # Service port (internal cluster access)
+      targetPort: 80                  # Container port exposed by the Pod
