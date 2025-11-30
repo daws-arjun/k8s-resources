@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service                         # We are creating a Service
+metadata:
+  name: nginx-np                      # Name of the Service
+spec:
+  type: NodePort                      # Exposes app externally using NodeIP:NodePort
+  selector:                           # Service will send traffic to Pods matching these labels
+    project: roboshop                 # Pod must have this label
+    component: frontend               # Pod must have this label
+    environment: dev                  # Pod must have this label
+    purpose: node-port                # Additional label to select specific Pod(s)
+  ports:
+    - protocol: TCP                   # TCP protocol (used by nginx)
+      port: 80                        # Service port (inside cluster)
+      targetPort: 80                  # Pod container port
+      # nodePort is optional. If not given, Kubernetes picks a port between 30000–32767
