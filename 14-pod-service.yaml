@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod                                # Creating a Pod
+metadata:
+  name: service-demo                      # Pod name
+  namespace: roboshop                     # Pod will run inside 'roboshop' namespace
+
+  # Labels are very important for Services!
+  # The Service will use these labels to select this Pod.
+  labels:
+    project: roboshop                     # Must match the Service selector label
+    component: frontend                   # Must match the Service selector label
+    environment: dev                      # Must match the Service selector label
+
+spec:
+  containers:
+  - name: nginx                           # Container name
+    image: nginx                          # Docker image used by the Pod
