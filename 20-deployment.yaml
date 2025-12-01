@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment                         # We are creating a Deployment
+metadata:
+  name: nginx                             # Name of the Deployment
+
+  # Labels for the Deployment object itself (not used for pod selection)
+  labels:
+    purpose: deployment-demo              # Just metadata for identification
+    project: roboshop                     # Just metadata for identification
+
+spec:
+  replicas: 4                              # Deployment will maintain 4 Pods at all times
+
+  selector:                                 # Deployment will manage Pods that match these labels
+    matchLabels:
+      purpose: deployment-demo             # MUST match pod template labels
+      project: roboshop                    # MUST match pod template labels
+
+  # Pod template (how each pod should look)
+  template:
+    metadata:
+      labels:                              # Labels added to the Pods created by the Deployment
+        purpose: deployment-demo           # MUST match selector labels
+        project: roboshop                  # MUST match selector labels
+    spec:
+      containers:
+      - name: nginx                        # Container name
+        image: nginx:trixie-perl           # Container image (you will update this to nginx:latest later)

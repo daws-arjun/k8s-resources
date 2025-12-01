@@ -26,4 +26,4 @@ spec:
     spec:
       containers:
       - name: nginx                       # Container name
-        image: nginx:trixie-perl          # Image used for each Pod
+        image: nginx                      # Image used for each Pod
