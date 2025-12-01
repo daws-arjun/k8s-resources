@@ -10,7 +10,7 @@ metadata:
     project: roboshop                     # Just metadata
 
 spec:
-  replicas: 10                            # Maintain exactly 10 Pods at all times
+  replicas: 5                             # Maintain exactly 5 Pods at all times
 
   selector:                                # ReplicaSet will select Pods that match these labels
     matchLabels:
