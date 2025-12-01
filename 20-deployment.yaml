@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment                         # We are creating a Deployment
 metadata:
   name: nginx                             # Name of the Deployment
+  namespace: roboshop
 
   # Labels for the Deployment object itself (not used for pod selection)
   labels:
