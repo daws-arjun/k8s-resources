@@ -1,29 +1,29 @@
 apiVersion: apps/v1
-kind: Deployment                         # We are creating a Deployment
+kind: Deployment                         # Creating a Deployment
 metadata:
-  name: nginx                             # Name of the Deployment
-  namespace: roboshop
+  name: nginx                             # Deployment name
+  namespace: roboshop                     # Deployment will run inside 'roboshop' namespace
 
-  # Labels for the Deployment object itself (not used for pod selection)
+  # Labels for the Deployment object (for identification only, not used for Pod selection)
   labels:
-    purpose: deployment-demo              # Just metadata for identification
-    project: roboshop                     # Just metadata for identification
+    purpose: deployment-demo              # Metadata label
+    project: roboshop                     # Metadata label
 
 spec:
-  replicas: 4                              # Deployment will maintain 4 Pods at all times
+  replicas: 4                              # Deployment ensures 4 Pods are always running
 
-  selector:                                 # Deployment will manage Pods that match these labels
+  selector:                                 # Deployment selects Pods that match these labels
     matchLabels:
-      purpose: deployment-demo             # MUST match pod template labels
-      project: roboshop                    # MUST match pod template labels
+      purpose: deployment-demo             # MUST match labels in Pod template
+      project: roboshop                    # MUST match labels in Pod template
 
-  # Pod template (how each pod should look)
+  # Pod template: defines how each Pod should be created
   template:
     metadata:
-      labels:                              # Labels added to the Pods created by the Deployment
+      labels:                              # Labels added to Pods created by this Deployment
         purpose: deployment-demo           # MUST match selector labels
         project: roboshop                  # MUST match selector labels
     spec:
       containers:
       - name: nginx                        # Container name
-        image: nginx:trixie-perl           # Container image (you will update this to nginx:latest later)
+        image: nginx:latest                # Container image (this will be used for rolling updates)
