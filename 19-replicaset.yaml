@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: ReplicaSet                         # We are creating a ReplicaSet
+metadata:
+  name: nginx                             # Name of the ReplicaSet
+  namespace: roboshop                     # RS will be created under 'roboshop' namespace
+
+  # Labels for the ReplicaSet object itself (not used for pod selection)
+  labels:
+    purpose: replicaset-demo              # Just metadata
+    project: roboshop                     # Just metadata
+
+spec:
+  replicas: 10                            # Maintain exactly 10 Pods at all times
+
+  selector:                                # ReplicaSet will select Pods that match these labels
+    matchLabels:
+      purpose: replicaset-demo            # MUST match pod template labels
+      project: roboshop                   # MUST match pod template labels
+
+  # Pod definition (template used to create Pods)
+  template:
+    metadata:
+      labels:                             # Labels assigned to the Pods created by RS
+        purpose: replicaset-demo          # MUST match selector labels
+        project: roboshop                 # MUST match selector labels
+    spec:
+      containers:
+      - name: nginx                       # Container name
+        image: nginx:trixie-perl          # Image used for each Pod
