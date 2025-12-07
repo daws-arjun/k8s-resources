@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fluentd-elasticsearch               # Name of the DaemonSet
+  namespace: kube-system                    # Runs in kube-system (system-level)
+  labels:
+    k8s-app: fluentd-logging                # Label for identification
+
+spec:
+  selector:
+    matchLabels:
+      name: fluentd-elasticsearch           # Select Pods with this label
+
+  template:
+    metadata:
+      labels:
+        name: fluentd-elasticsearch         # Pod label (used by selector)
+
+    spec:
+      tolerations:
+      # -------------------------------------------------------------
+      # TOLERATIONS
+      # Allow DaemonSet Pod to run on control-plane nodes as well.
+      # Without these tolerations, Pods run only on worker nodes.
+      # -------------------------------------------------------------
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+
+      containers:
+      - name: fluentd-elasticsearch          # Container name
+        image: quay.io/fluentd_elasticsearch/fluentd:v5.0.1  # Fluentd image
+        
+        # Resource limits to prevent excessive usage
+        resources:
+          limits:
+            memory: 200Mi
+          requests:
+            cpu: 100m
+            memory: 200Mi
+
+        # -------------------------------------------------------------
+        # VOLUME MOUNT
+        # Mount the host's /var/log directory inside the container.
+        # Fluentd reads logs from the node’s /var/log (host logs).
+        # This is READ-ONLY since Fluentd should not modify host logs.
+        # -------------------------------------------------------------
+        volumeMounts:
+        - name: varlog
+          mountPath: /var/log               # Where it appears inside the container
+          readOnly: true                    # Prevent accidental changes
+
+      # Optional: You can assign a high priority class to preempt resources
+      # priorityClassName: important
+
+      terminationGracePeriodSeconds: 30      # Time given for clean shutdown
+
+      # -------------------------------------------------------------
+      # VOLUME SECTION → hostPath
+      # This makes the Pod access the HOST NODE directory (/var/log).
+      # Every node has its own /var/log directory.
+      # DaemonSet ensures one pod per node → perfect for log collection.
+      #
+      # hostPath:
+      #   path: /var/log
+      # Means:
+      # "Give the Pod direct access to the node's /var/log directory."
+      # -------------------------------------------------------------
+      volumes:
+      - name: varlog
+        hostPath:
+          path: /var/log                     # Node's log directory (REAL path)
