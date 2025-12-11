@@ -1,0 +1,52 @@
+# =====================================================================
+# 1) STORAGECLASS FOR DYNAMIC EFS PROVISIONING
+# =====================================================================
+# - Created by Kubernetes Admins (only once).
+# - PVCs referencing this StorageClass will automatically create:
+#       ✔ An EFS Access Point
+#       ✔ A directory inside the EFS filesystem
+#       ✔ A PersistentVolume dynamically
+#
+# - EFS is REGIONAL (multi-AZ), and supports ReadWriteMany (RWX).
+# - Best suited for shared content, microservices, and web assets.
+# =====================================================================
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: roboshop-efs                     # StorageClass developers will reference
+
+provisioner: efs.csi.aws.com             # CSI driver for AWS EFS (MUST be installed)
+
+parameters:
+  # -------------------------------------------------------------------
+  # provisioningMode: efs-ap
+  # - Means: automatically create an EFS Access Point for each PVC.
+  # - Access Points give:
+  #       ✔ Isolated folders for each claim
+  #       ✔ POSIX permissions (ownership, UID/GID)
+  #       ✔ Better security than direct EFS mounts
+  # -------------------------------------------------------------------
+  provisioningMode: efs-ap
+
+  # -------------------------------------------------------------------
+  # fileSystemId:
+  # - REQUIRED: EFS filesystem ID (fs-xxxxxxxx)
+  # - The new dynamic directories & access points will be created here
+  # -------------------------------------------------------------------
+  fileSystemId: fs-095391b54d2e887eb     # Replace with your actual EFS ID
+
+  # -------------------------------------------------------------------
+  # directoryPerms:
+  # - Sets the permissions on the provisioned directory (octal format)
+  # - "700" → Owner can read/write/execute, others denied
+  # - Best practice for application isolation & security
+  # -------------------------------------------------------------------
+  directoryPerms: "700"
+
+  # -------------------------------------------------------------------
+  # basePath (Optional)
+  # - If set, all dynamic PVC folder paths will be created *inside* this base path
+  #     Example: /roboshop/pvc-xxxxxx
+  # - Useful for organizing multiple applications inside one EFS filesystem
+  # -------------------------------------------------------------------
+  basePath: "/roboshop"                  # Optional but good practice

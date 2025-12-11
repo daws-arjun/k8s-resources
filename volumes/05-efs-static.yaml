@@ -1,0 +1,96 @@
+# =====================================================================
+# 1) PERSISTENT VOLUME (STATIC PROVISIONING)
+# =====================================================================
+# - This PV is manually created by the Kubernetes admin.
+# - It uses an EXISTING AWS EFS file system (static provisioning).
+# - EFS is a MANAGED NFS filesystem (elastic size, shared storage).
+# =====================================================================
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: efs-static                              # Name of the PV
+spec:
+  capacity:
+    storage: 5Gi                                # EFS ignores size; required by K8s for validation only
+                                                # EFS is elastic → grows automatically
+  volumeMode: Filesystem                        # EFS can ONLY be filesystem mode (not block)
+
+  accessModes:
+    - ReadWriteOnce                             # EFS normally supports ReadWriteMany
+                                                # RWO is allowed but RWX is more common for EFS
+                                                # For RWX → use: ReadWriteMany
+
+  storageClassName: ""                          # MUST be empty for static provisioning
+                                                # (prevents dynamic provisioning)
+  
+  persistentVolumeReclaimPolicy: Retain         # Retain → KEEP data even if PVC is deleted
+                                                # Best for production: prevents accidental data loss
+
+  # ---------------------------------------------------------------
+  # CSI CONFIGURATION FOR AWS EFS
+  # volumeHandle must be the **File System ID** (fs-xxxxxx)
+  # OR EFS Access Point ARN if accessPoints are used.
+  # ---------------------------------------------------------------
+  csi:
+    driver: efs.csi.aws.com                      # AWS EFS CSI driver
+    volumeHandle: fs-08a95a42623fb47ea           # REQUIRED: Replace with actual EFS file system ID
+                                                 # Example: fs-12345678
+
+
+---
+# =====================================================================
+# 2) PERSISTENT VOLUME CLAIM (PVC)
+# =====================================================================
+# - The PVC binds to the PV via:
+#     storageClassName: ""  +  matching accessModes  +  matching size
+# - No StorageClass = NO dynamic provisioning.
+# =====================================================================
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: efs-static                                # PVC name
+spec:
+  accessModes:
+    - ReadWriteOnce                               # Must match PV access mode
+  storageClassName: ""                            # MUST be empty → static binding
+  resources:
+    requests:
+      storage: 5Gi                                # Must be ≤ PV capacity
+
+
+---
+# =====================================================================
+# 3) POD THAT USES THE EFS PVC
+# =====================================================================
+# - Mounts EFS at /usr/share/nginx/html
+# - EFS is multi-AZ, multi-node. No AZ restriction like EBS.
+# - nodeSelector IS NOT required for EFS (but allowed).
+# =====================================================================
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx                                     # Pod name
+  labels:
+    purpose: efs-static
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    volumeMounts:
+    - name: nginx-html
+      mountPath: /usr/share/nginx/html           # Nginx document root (EFS folder will appear here)
+
+  # ---------------------------------------------------------------
+  # nodeSelector is NOT required for EFS.
+  # EBS is AZ-specific → needs nodeSelector (sometimes).
+  # EFS is regional / multi-AZ → NO restriction.
+  #
+  # You may remove nodeSelector completely unless you want a specific node.
+  # ---------------------------------------------------------------
+  nodeSelector:
+    topology.kubernetes.io/zone: us-east-1b
+
+  volumes:
+  - name: nginx-html
+    persistentVolumeClaim:
+      claimName: efs-static                       # Bind PVC into the Pod

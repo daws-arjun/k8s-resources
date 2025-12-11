@@ -1,0 +1,76 @@
+# ------------------------------------------------------------
+# 1) PERSISTENT VOLUME CLAIM (Dynamic provisioning)
+#    - A PVC requesting storage from StorageClass "roboshop-ebs".
+#    - The CSI driver (ebs.csi.aws.com) will dynamically create a PV/EBS
+#      when this PVC is bound to a Pod (because SC uses WaitForFirstConsumer).
+# ------------------------------------------------------------
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ebs-dynamic                # PVC name (used by Pods to mount storage)
+spec:
+  accessModes:
+    - ReadWriteOnce                # RWO: block volumes (EBS) mounted by one node at a time
+  storageClassName: roboshop-ebs   # StorageClass that provisions the PV dynamically
+  resources:
+    requests:
+      storage: 4Gi                 # Requested capacity (PV created will be >= this)
+
+
+---
+# ------------------------------------------------------------
+# 2) POD that consumes the PVC
+#    - When this Pod is created, the scheduler + CSI driver will:
+#       1) choose a node (AZ)
+#       2) create an EBS volume in that AZ (PV)
+#       3) bind PVC -> PV and attach the EBS volume to the node
+#    - NOTE: nodeSelector is commented out because WaitForFirstConsumer will
+#      create PV in the AZ where the Pod is scheduled. If you force nodeSelector
+#      to an AZ, ensure the Pod can schedule there.
+# ------------------------------------------------------------
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+  labels:
+    purpose: ebs-dynamic
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    volumeMounts:
+    - name: nginx-html
+      mountPath: /usr/share/nginx/html   # Where the EBS-backed filesystem will be mounted
+
+  # If you uncomment nodeSelector you force the Pod to a specific AZ/node.
+  # Generally *avoid* forcing AZ unless you know the EBS volume/SC behavior.
+  # nodeSelector:
+  #   topology.kubernetes.io/zone: us-east-1b
+
+  volumes:
+  - name: nginx-html
+    persistentVolumeClaim:
+      claimName: ebs-dynamic            # Mount the PVC into the Pod
+
+
+---
+# ------------------------------------------------------------
+# 3) SERVICE to expose the Pod
+#    - Exposes the Pod via LoadBalancer (in AWS, creates an ELB/ALB depending on setup)
+#    - Selector picks the Pod by label (purpose: ebs-dynamic)
+# ------------------------------------------------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-ebs-dynamic
+spec:
+  type: LoadBalancer                    # External IP via cloud-provider LB
+  selector:
+    purpose: ebs-dynamic                # Selects the Pod created above
+  ports:
+    - protocol: TCP
+      port: 80                           # Service port (external)
+      targetPort: 80                     # Container port (nginx)
+      nodePort: 30007                    # NodePort fallback (if applicable)
+
+

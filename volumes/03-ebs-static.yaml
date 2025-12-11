@@ -1,0 +1,103 @@
+# ------------------------------------------------------------
+# 1) PERSISTENT VOLUME (Static Provisioning)
+#    - Created manually by K8s Admin
+#    - Uses an existing AWS EBS volume (STATIC)
+# ------------------------------------------------------------
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: ebs-static                     # Name of the PV
+spec:
+  accessModes:
+  - ReadWriteOnce                     # EBS supports only RWO (mounted by 1 node at a time)
+                                      # Other modes: ReadOnlyMany, ReadWriteMany (EFS)
+  
+  persistentVolumeReclaimPolicy: Retain
+  # Retain  → Keep EBS data even if PVC is deleted (MOST IMPORTANT FOR PRODUCTION)
+  # Recycle → Deprecated (used to wipe data)
+  # Delete  → Deletes the disk from AWS (used in dynamic provisioning only)
+
+  capacity:
+    storage: 15Gi                     # PV capacity
+
+  # Using CSI driver for AWS EBS
+  csi:
+    driver: ebs.csi.aws.com           # Required EBS CSI driver
+    fsType: ext4                      # File system type to format the EBS volume
+    volumeHandle: vol-08a1628c9a820c0e0   # MUST be an existing AWS EBS Volume ID
+
+
+---
+# ------------------------------------------------------------
+# 2) PERSISTENT VOLUME CLAIM (PVC)
+#    - Claims storage from the PV above
+#    - storageClassName must be empty for static binding
+# ------------------------------------------------------------
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ebs-static                     # PVC name
+spec:
+  storageClassName: ""                # MUST be empty → prevents dynamic provisioning
+                                      # Ensures static PV is used
+  volumeName: ebs-static              # Bind this PVC to the specific PV by name
+
+  accessModes:
+    - ReadWriteOnce                   # Must match PV accessMode
+
+  resources:
+    requests:
+      storage: 15Gi                   # Must be ≤ PV size
+
+
+---
+# ------------------------------------------------------------
+# 3) POD USING PVC
+#    - Mounts the EBS volume into /usr/share/nginx/html
+#    - EBS volumes are ZONAL → Pod MUST run in same AZ as the EBS disk
+# ------------------------------------------------------------
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx                         # Pod name
+  labels:
+    purpose: ebs-static               # Used by the Service selector
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    volumeMounts:
+    - name: nginx-html
+      mountPath: /usr/share/nginx/html  # Nginx content folder (EBS will persist data)
+
+  # VERY IMPORTANT: EBS IS AZ-SPECIFIC
+  # Pod must run in the SAME AZ as the EBS volume
+  nodeSelector:
+    topology.kubernetes.io/zone: us-east-1b   # Must match EBS volume AZ
+
+  volumes:
+  - name: nginx-html
+    persistentVolumeClaim:
+      claimName: ebs-static            # Mount the PVC into the Pod
+
+
+---
+# ------------------------------------------------------------
+# 4) SERVICE FOR THE POD
+#    - Exposes Nginx externally using LoadBalancer
+# ------------------------------------------------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-ebs-static              # Service name
+spec:
+  type: LoadBalancer                  # External access (ELB in AWS)
+  
+  selector:
+    purpose: ebs-static               # Must match Pod label
+
+  ports:
+    - protocol: TCP
+      port: 80                        # Service port
+      targetPort: 80                  # Container port
+      nodePort: 30007                 # For NodePort fallback (ignored by LB)
