@@ -1,0 +1,75 @@
+# -------------------------------
+# DEPLOYMENT (Creates 4 NGINX Pods)
+# -------------------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  # Labels applied to the Deployment & ReplicaSet
+  labels:
+    purpose: dp-demo
+    project: roboshop
+spec:
+  replicas: 4   # Number of Pods to run
+  selector:
+    matchLabels:
+      # These labels MUST match pod template labels
+      # Deployment uses this to manage pods
+      purpose: headless-svc-demo
+      project: roboshop
+  template:
+    metadata:
+      labels:
+        # Pod labels used by both services
+        purpose: headless-svc-demo
+        project: roboshop
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest  # NGINX container
+
+---
+# ---------------------------------------------------
+# NORMAL CLUSTERIP SERVICE (Default — Load Balancing)
+# ---------------------------------------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+spec:
+  # Service forwards traffic to Pods with these labels
+  selector:
+    purpose: headless-svc-demo
+    project: roboshop
+  ports:
+    - protocol: TCP
+      port: 80        # Service port (Stable Virtual IP)
+      targetPort: 80  # Container port (NGINX listens here)
+  # NOTE: No clusterIP field → This is a normal ClusterIP service
+  # It provides:
+  # 1. Load balancing across pods
+  # 2. One stable virtual IP (VIP)
+  # 3. DNS returns a single ClusterIP
+
+---
+# ------------------------------------------
+# HEADLESS SERVICE (clusterIP: None)
+# ------------------------------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-headles
+spec:
+  clusterIP: None
+  # Setting clusterIP=None makes it a HEADLESS service:
+  # → No load balancing
+  # → No virtual IP (no ClusterIP allocated)
+  # → DNS returns A record for EACH POD IP
+  # → Used by StatefulSets, databases, etc.
+  selector:
+    purpose: headless-svc-demo
+    project: roboshop
+  ports:
+    - protocol: TCP
+      port: 80        # Port is still needed for DNS discovery
+      targetPort: 80
