@@ -73,3 +73,7 @@ spec:
     - protocol: TCP
       port: 80        # Port is still needed for DNS discovery
       targetPort: 80
+
+
+
+ajs
