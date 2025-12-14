@@ -1,0 +1,105 @@
+# ----------------------------------------------------
+# HEADLESS SERVICE (Required for StatefulSet stable DNS)
+# ----------------------------------------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-headless
+  labels:
+    app: nginx
+    purpose: stateful-demo
+spec:
+  ports:
+  - port: 80
+    name: web
+  clusterIP: None              # Makes this a HEADLESS service
+  # Headless service provides:
+  # ✔ No load balancing (no ClusterIP)
+  # ✔ DNS returns individual Pod IPs
+  # ✔ Required for stable network identities in StatefulSets
+  selector:
+    app: nginx
+    purpose: stateful-demo
+
+---
+# ----------------------------------------------------
+# NORMAL CLUSTERIP SERVICE (Optional — load balancer)
+# ----------------------------------------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+  labels:
+    app: nginx
+    purpose: stateful-demo
+spec:
+  ports:
+  - port: 80
+    name: web
+  selector:
+    app: nginx
+    purpose: stateful-demo
+  # This service load-balances traffic across all pods
+  # DNS → nginx.default.svc.cluster.local → 1 ClusterIP
+
+---
+# ----------------------------------------------------
+# STATEFULSET (Gives stable identity, storage & ordering)
+# ----------------------------------------------------
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: nginx
+spec:
+  # These labels must match pod template labels
+  selector:
+    matchLabels:
+      app: nginx
+      purpose: stateful-demo
+
+  serviceName: "nginx-headless"
+  # This MUST be the headless service name.
+  # It is used to create DNS entries:
+  # nginx-0.nginx-headless.default.svc.cluster.local
+  # nginx-1.nginx-headless.default.svc.cluster.local
+
+  replicas: 3   # StatefulSet will create 3 pods: nginx-0, nginx-1, nginx-2
+
+  template:
+    metadata:
+      labels:
+        app: nginx
+        purpose: stateful-demo
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        ports:
+        - containerPort: 80
+          name: web
+        volumeMounts:
+        - name: www
+          mountPath: /usr/share/nginx/html
+          # Each pod gets its OWN storage:
+          # nginx-0 → pvc: www-nginx-0
+          # nginx-1 → pvc: www-nginx-1
+          # nginx-2 → pvc: www-nginx-2
+
+  # -------------------------------------------------
+  # PVC TEMPLATE — Each StatefulSet pod gets its own PVC
+  # -------------------------------------------------
+  volumeClaimTemplates:
+  - metadata:
+      name: www
+    spec:
+      accessModes: ["ReadWriteOnce"]  # EBS → RWO
+      storageClassName: "roboshop-ebs"
+      resources:
+        requests:
+          storage: 1Gi
+      # This creates persistent volumes PER POD, e.g.:
+      # pvc-www-nginx-0
+      # pvc-www-nginx-1
+      # pvc-www-nginx-2
+      #
+      # Even if pods restart, they keep the SAME PVC
